@@ -1,0 +1,11 @@
+tunnel: 
+credentials-file: /etc/cloudflared/
+
+ingress:
+  - hostname: fill-me.notoriousdev.in
+    service: http://traefik:80
+
+  - hostname: fill-me.notoriousdev.in
+    service: http://traefik:80
+
+  - service: http_status:404

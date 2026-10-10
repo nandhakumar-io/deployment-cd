@@ -1,0 +1,39 @@
+services:
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    restart: unless-stopped
+    networks:
+      - proxy
+    volumes:
+      - ./cloudflared:/etc/cloudflared
+
+  traefik:
+    image: traefik:latest
+    command:
+      - "--configFile=/traefik.yaml"
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    expose:
+      - "80"
+    env_file: .env
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./data/traefik.yaml:/traefik.yaml:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.rule=Host(`traefik-dashboard.notoriousdev.in`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_DASHBOARD_CREDENTIALS}"
+      - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+networks:
+  proxy:
+    name: proxy
+
